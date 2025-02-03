@@ -1,7 +1,7 @@
 YFLAGS = -d	# force creation of y.tab.h
 OBJS = hoc.o code.o init.o math.o symbol.o	# abbreviation
 
-hoc3: $(OBJS)
+hoc4: $(OBJS)
 	cc $(OBJS) -lm -o hoc4
 
 hoc.o code.o init.h symbo.o: hoc.h
