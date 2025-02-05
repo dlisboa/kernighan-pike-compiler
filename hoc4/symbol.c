@@ -26,6 +26,7 @@ Symbol *install(char* s, int t, double d) {
   strcpy(sp->name, s);
   sp->type = t;
   sp->u.val = d;
+  sp->u.ptr = NULL;
 
   sp->next = symlist; // put at front of list
   symlist = sp;

@@ -11,6 +11,9 @@ int yylex();
 void yyerror(char*);
 void execerror(char*, char*);
 extern double Pow(double, double);
+void inspect();
+void pr(Symbol*);
+extern double sin(double);
 %}
 %union {
 	double val;
@@ -28,7 +31,7 @@ extern double Pow(double, double);
 list: /* nothing */
 	| list '\n'
 	| list asgn '\n'
-	| list expr '\n' { printf("\t%.8g\n", $2); }
+	| list expr '\n' { inspect(); printf("\t%.8g\n", $2); }
 	| list error '\n' { yyerrok; }
 	;
 asgn:	VAR '=' expr { $$ = $1->u.val = $3; $1->type = VAR; }
@@ -37,7 +40,7 @@ expr: 	NUMBER
 		    execerror("undefined variable", $1->name);
 		$$ = $1->u.val; }
 	| asgn
-	| BLTIN '(' expr ')' { $$ = (*($1->u.ptr))($3); }
+	| BLTIN '(' expr ')' { pr($1); $$ = (*($1->u.ptr))($3); }
 	| expr '+' expr { $$ = $1 + $3; }
 	| expr '-' expr { $$ = $1 - $3; }
 	| expr '*' expr { $$ = $1 * $3; }
@@ -52,6 +55,24 @@ expr: 	NUMBER
 	| '-' expr %prec UNARYMINUS { $$ = -$2; }
 	;
 %%
+void pr(Symbol* s) {
+	puts("-- pr --");
+	printf("name: %s, type: %d, val: %g, fn: %p\n", s->name, s->type, s->u.val, s->u.ptr);
+	puts("--");
+}
+
+extern Symbol* symlist;
+void inspect() {
+	Symbol* s;
+	int i = 0;
+	puts("-- symbol table (n=10) --");
+	for (s = symlist; s != NULL && i < 10; s = s->next) {
+		i++;
+		printf("name: %s, type: %d, val: %g, fn: %p\n", s->name, s->type, s->u.val, s->u.ptr);
+	}
+	puts("--");
+}
+
 
 char *progname;
 int lineno = 1;
@@ -121,5 +142,6 @@ int main(int argc, char** argv) {
 	init();
 	setjmp(begin);
 	signal(SIGFPE, fpecatch);
+	inspect();
 	yyparse();
 }

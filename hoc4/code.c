@@ -3,12 +3,10 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NSTACK 256
-static Datum stack[NSTACK]; // the stack
-static Datum *stackp; // next free spot on stack
+Datum stack[NSTACK]; // the stack
+Datum *stackp; // next free spot on stack
 
 // can have at most 2000 instructions
-#define NPROG 2000
 Inst prog[NPROG]; // the machine
 Inst *progp; // next free spot for code generation
 Inst *pc; // program counter during execution
@@ -100,7 +98,7 @@ int print() {
 int bltin() {
 	Datum d;
 	d = pop();
-	d.val = (*(double (*)())(*pc++))(d.val);
+	d.val = (*(double (*)(double))(*pc++))(d.val);
 	push(d);
 	return 0;
 }

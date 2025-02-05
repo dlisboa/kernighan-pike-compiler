@@ -5,6 +5,7 @@
 // compiling errors in newer C versions. Some function declarations were changed
 // to match newer C standards.
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include "hoc.h"
 int yylex();
@@ -109,13 +110,118 @@ void fpecatch() {
 	execerror("floating point exception", (char*)0);
 }
 
+extern Datum* stack;
+extern Datum* stackp;
+extern Inst* progp, pc;
+
+void inspectstack() {
+  puts("\tstack:");
+
+  puts("\t\t-- top --");
+  for (Datum* d = stack; d; d++) {
+    if (stackp == d) {
+    // printf("\t\t%p: |%g|\n", &d->val, d->val);
+      printf("\t\t%p: |%g| <-- stackp (next free)\n", &d->val, d->val);
+    } else if (stackp == d + 1) {
+      printf("\t\t%p: |%g| <-- actual top\n", &d->val, d->val);
+    } else {
+      printf("\t\t%p: |%g|\n", &d->val, d->val);
+    }
+  }
+  puts("\t\t-- bottom --");
+}
+
+struct inst {
+  char* name;
+  Inst func;
+} insts[] = {
+  "constpush", constpush,
+  "varpush", varpush,
+  "eval", eval,
+  "assign", assign,
+  "print", print,
+  "bltin", bltin,
+  "add", add,
+  "sub", sub,
+  "stop", STOP,
+  0, 0,
+};
+
+void inspectops() {
+  puts("\tinstructions:");
+  for (int i=0; insts[i].name; i++) {
+    printf("\t\t%s: %p\n", insts[i].name, insts[i].func);
+  }
+}
+
+void lookupinst(Inst key, char* buf) {
+	// printf("looking up: %p\n", key);
+	struct inst *i;
+	for (i = insts; i; i++) {
+		if (i->func == key) {
+			strcpy(buf, i->name);
+		} else {
+			strcpy(buf, "<notfound>");
+		}
+		break;
+	}
+}
+
+void inspectprogram() {
+  puts("\tprogram:");
+
+  puts("\t\t-- start --");
+	char buf[100];
+  for (int p = 0; p < 10; p++) {
+  	Inst i = prog[p];
+  	if (prog == &prog[p]) {
+			lookupinst(*i, buf);
+	  	printf("%16s%10p: |%p| (%s)\n", "prog --> ", &prog[p], *i, buf);
+  	} else if (i != NULL) {
+			lookupinst(*i, buf);
+	  	printf("\t\t%10p: |%p| (%s)\n", &prog[p], *i, buf);
+  	} else {
+	  	printf("\t\t%10p: |%p|\n", &prog[p], *i);
+  	}
+  }
+  puts("\t\t-- end --");
+}
+
+void inspectpointers() {
+  puts("\tpointers:");
+  printf("\t\tpc: %p\n", pc);
+  printf("\t\tprogp: %p\n", progp);
+  printf("\t\tprog: %p\n", prog);
+  printf("\t\tstackp: %p\n", (void*)stackp);
+}
+
+void inspectmachine() {
+  inspectops();
+  inspectprogram();
+  inspectpointers();
+  inspectstack();
+}
+
 int main(int argc, char** argv) {
 	progname = argv[0];
 	init();
 	setjmp(begin);
 	signal(SIGFPE, fpecatch);
+
+	initcode();
+	puts("== initial state, machine at rest");
+	inspectmachine();
 	// start and end with a "clean" machine each time we parse
-	for (initcode(); yyparse(); initcode())
-		execute(prog);
-	yyparse();
+	puts("== ready to interpret");
+	// for (initcode(); yyparse(); initcode()) {
+	// 	inspectmachine();
+	// 	puts("== execution");
+	// 	execute(prog);
+	// }
+
+	// yyparse();
+
+	inspectmachine();
+	puts("== execution");
+	execute(prog);
 }

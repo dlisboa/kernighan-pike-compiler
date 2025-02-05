@@ -3,7 +3,7 @@
 #include <string.h>
 #include "y.tab.h"
 
-static Symbol *symlist = 0;
+Symbol *symlist = 0;
 
 Symbol *lookup(char* s) {
   Symbol *sp;
@@ -26,6 +26,7 @@ Symbol *install(char* s, int t, double d) {
   strcpy(sp->name, s);
   sp->type = t;
   sp->u.val = d;
+  sp->u.ptr = NULL;
 
   sp->next = symlist; // put at front of list
   symlist = sp;

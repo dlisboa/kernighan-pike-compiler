@@ -1,9 +1,12 @@
+#define NSTACK 256
+#define NPROG 2000
+
 typedef struct Symbol { // symbol table entry
 	char* name;
 	short type; // NUMBER, VAR, BLTIN, UNDEF
 	union {
 		double val; // if NUMBER, VAR
-		double (*ptr)(); // if BLTIN
+		double (*ptr)(double); // if BLTIN
 	} u;
 	struct Symbol *next;
 } Symbol;

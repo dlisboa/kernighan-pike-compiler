@@ -9,6 +9,7 @@
 int yylex();
 void yyerror(char*);
 void execerror(char*, char*);
+void inspect();
 
 double mem[26];
 %}
@@ -26,7 +27,7 @@ double mem[26];
 %%
 list: /* nothing */
 	| list '\n'
-	| list expr '\n' { printf("\t%.8g\n", $2); }
+	| list expr '\n' { inspect(); printf("\t%.8g\n", $2); }
 	| list error '\n' { yyerrok; }
 	;
 expr: NUMBER { $$ = $1; }
@@ -45,6 +46,18 @@ expr: NUMBER { $$ = $1; }
 	| '-' expr %prec UNARYMINUS { $$ = -$2; }
 	;
 %%
+
+void inspect() {
+	puts("--");
+	puts("mem:");
+	for (int i = 0; i < 26; i++) {
+		if (i % 6 == 0) {
+			puts("");
+		}
+		printf("%c: |%7.2lf| ", i + 'a', mem[i]);
+	}
+	puts("\n--");
+}
 
 char *progname;
 int lineno = 1;

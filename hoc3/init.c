@@ -3,6 +3,7 @@
 #include <math.h>
 
 extern double Log(), Log10(), Exp(), Sqrt(), integer();
+extern double sin(double);
 
 static struct {
 	char *name;
